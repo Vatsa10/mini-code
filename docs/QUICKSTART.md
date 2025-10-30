@@ -33,6 +33,28 @@ Once MiniCode is running, you can use these commands:
   - Example: `/run examples/hello.js`
   - Example: `/run examples/test.py`
 
+- `/write <filepath>
+  - Example: `/write test.js`
+
+### Codebase Navigation
+es
+  - Example: `/sea`
+`
+
+- `/find <filename>` - Find files
+`
+  - Example: `/find App`
+
+- `/tree` - Display proructure
+
+
+- `/analyze` - Analyze codebasestics
+  - Sho
+
+- `/list [extension]` - List filter)
+  - Example: `/lis`
+ist .tsx``/l Example:   -st .tional(optes fil all and typesle counts ws fistati our projectal tree of yhows visu - S stirectory ect djfind confige: `/  - Exampl by nameg"handlinch "error  `/seare:pl - Exam Staterch useil facross allt for texh rm>` - Searcteh <arc- `/set a fileeate or edi- Cr` 
+
 ### Special Features
 - **Auto Error Analysis**: When code fails, MiniCode analyzes errors and suggests fixes
 - **Streaming Responses**: See AI responses in real-time as they're generated
@@ -95,9 +117,25 @@ Additional settings can be modified in `src/config.ts`:
 ## Next Steps
 
 Try these examples:
+
+### Basic Usage
 1. `/read examples/hello.js` - View the sample JavaScript file
 2. `/run examples/hello.js` - Execute it
 3. Ask: "Can you add error handling to this code?"
 4. `/run examples/test.py` - Try Python execution (requires Python installed)
 
-Enjoy coding with MiniCode! 🚀
+### Explore Your Codebase
+1. `/tree` - See the project structure
+2. `/analyze` - Get codebase statistics
+3. `/find config` - Find configuration files
+4. `/search "import"` - See all imports
+5. `/list .ts` - List all TypeScript files
+
+### AI-Assisted Development
+1. `/search useState` - Find state usage
+2. Ask: "How is state managed in this project?"
+3. `/find App` - Find App files
+4. `/read src/ui/App.tsx` - Read the main app
+5. Ask: "Can you explain how this component works?"
+
+Enjoy coding with MiniCode!

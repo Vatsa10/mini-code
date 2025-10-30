@@ -38,6 +38,7 @@ npm run dev
 - `docs/QUICKSTART.md` - Getting started guide
 - `docs/PROJECT_OVERVIEW.md` - Technical details
 - `docs/API_REFERENCE.md` - API documentation
+- `docs/CODEBASE_SEARCH.md` - Search and navigation features
 - `docs/TEST_CHECKLIST.md` - Testing guide
 
 ## Support

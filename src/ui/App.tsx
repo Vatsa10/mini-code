@@ -8,6 +8,7 @@ import { MinimaxClient } from '../api/minimaxClient.js';
 import { Conversation } from '../core/conversation.js';
 import { FileManager } from '../core/filesystem.js';
 import { CodeEngine } from '../core/codeEngine.js';
+import { CodebaseSearch } from '../core/codebaseSearch.js';
 import type { Message } from '../types.js';
 
 export const App: React.FC = () => {
@@ -18,17 +19,21 @@ export const App: React.FC = () => {
   const [client] = useState(() => new MinimaxClient());
   const [fileManager] = useState(() => new FileManager());
   const [codeEngine] = useState(() => new CodeEngine());
+  const [codebaseSearch] = useState(() => new CodebaseSearch());
 
   useEffect(() => {
     conversation.addMessage('system', 
       'You are MiniCode, an intelligent coding assistant. You help developers with:\n' +
       '- Answering coding questions and explaining concepts\n' +
       '- Reading and analyzing code files\n' +
+      '- Searching through codebases to find relevant code\n' +
       '- Running code and debugging errors\n' +
       '- Suggesting fixes and improvements\n' +
-      '- Writing new code snippets\n\n' +
-      'When users run code that fails, analyze the error and offer specific fixes. ' +
-      'Be concise, practical, and focus on working solutions.'
+      '- Writing new code snippets\n' +
+      '- Understanding project structure and file organization\n\n' +
+      'Users can search the codebase with /search, find files with /find, view structure with /tree, ' +
+      'and analyze the project with /analyze. When they use these commands, help them understand ' +
+      'the results and suggest next steps. Be concise, practical, and focus on working solutions.'
     );
   }, []);
 
@@ -57,6 +62,35 @@ export const App: React.FC = () => {
         `To write to ${filePath}, please provide the content in your next message, or ask me to generate it for you.`
       );
       setMessages([...conversation.getMessages()]);
+      return;
+    }
+
+    if (input.startsWith('/search ')) {
+      const searchTerm = input.slice(8).trim();
+      await handleSearch(searchTerm);
+      return;
+    }
+
+    if (input.startsWith('/find ')) {
+      const fileName = input.slice(6).trim();
+      await handleFindFiles(fileName);
+      return;
+    }
+
+    if (input.startsWith('/tree')) {
+      await handleShowTree();
+      return;
+    }
+
+    if (input.startsWith('/analyze')) {
+      await handleAnalyzeCodebase();
+      return;
+    }
+
+    if (input.startsWith('/list')) {
+      const parts = input.slice(5).trim().split(' ');
+      const extension = parts[0] || undefined;
+      await handleListFiles(extension);
       return;
     }
 
@@ -117,6 +151,91 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleSearch = async (searchTerm: string) => {
+    try {
+      const results = await codebaseSearch.searchInFiles(searchTerm);
+      if (results.length === 0) {
+        conversation.addMessage('assistant', `No results found for "${searchTerm}"`);
+      } else {
+        let output = `Found ${results.length} matches for "${searchTerm}":\n\n`;
+        results.slice(0, 20).forEach(result => {
+          output += `${result.file}:${result.line}\n  ${result.content}\n\n`;
+        });
+        if (results.length > 20) {
+          output += `... and ${results.length - 20} more results`;
+        }
+        conversation.addMessage('assistant', output);
+      }
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Search failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleFindFiles = async (fileName: string) => {
+    try {
+      const results = await codebaseSearch.searchFiles(fileName);
+      if (results.length === 0) {
+        conversation.addMessage('assistant', `No files found matching "${fileName}"`);
+      } else {
+        let output = `Found ${results.length} files matching "${fileName}":\n\n`;
+        results.forEach(file => {
+          output += `${file.path} (${(file.size / 1024).toFixed(2)} KB)\n`;
+        });
+        conversation.addMessage('assistant', output);
+      }
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `File search failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleShowTree = async () => {
+    try {
+      const tree = await codebaseSearch.getFileTree('.', 3);
+      conversation.addMessage('assistant', `Project structure:\n\n${tree}`);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Failed to generate tree: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleAnalyzeCodebase = async () => {
+    try {
+      const analysis = await codebaseSearch.analyzeCodebase();
+      conversation.addMessage('assistant', analysis);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Analysis failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleListFiles = async (extension?: string) => {
+    try {
+      const files = await codebaseSearch.listAllFiles('.', extension);
+      if (files.length === 0) {
+        conversation.addMessage('assistant', `No files found${extension ? ` with extension ${extension}` : ''}`);
+      } else {
+        let output = `Found ${files.length} files${extension ? ` with extension ${extension}` : ''}:\n\n`;
+        files.slice(0, 50).forEach(file => {
+          output += `${file.path}\n`;
+        });
+        if (files.length > 50) {
+          output += `\n... and ${files.length - 50} more files`;
+        }
+        conversation.addMessage('assistant', output);
+      }
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Failed to list files: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
   return (
     <Box flexDirection="column" padding={1}>
       <Box borderStyle="double" borderColor="cyan" paddingX={2} paddingY={1} marginBottom={1}>
@@ -142,7 +261,7 @@ export const App: React.FC = () => {
       </Box>
       
       <Box marginTop={1}>
-        <Text dimColor>Commands: /run &lt;file&gt; | /read &lt;file&gt; | /write &lt;file&gt; | Ctrl+C to exit</Text>
+        <Text dimColor>Commands: /run | /read | /write | /search | /find | /tree | /analyze | /list | Ctrl+C</Text>
       </Box>
     </Box>
   );

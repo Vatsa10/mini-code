@@ -5,12 +5,14 @@ An intelligent, interactive coding environment that brings Claude Code–style c
 ## Features
 
 - **Interactive Chat**: Conversational AI coding assistant in your terminal
+- **Codebase Search**: Search for text across files, find files by name, analyze project structure
 - **Multi-file Editing**: Read, modify, and save multiple files with diff previews
 - **Code Execution**: Run code directly and get instant feedback
 - **Compile-Run-Fix Loop**: Automatic error detection and fix suggestions
 - **Syntax Highlighting**: Beautiful code display with highlight.js
 - **Diff Visualization**: Color-coded diffs for all file changes
 - **Session Transcripts**: Auto-save conversation history
+- **Project Analysis**: Get insights into your codebase structure and file types
 
 ## Installation
 
@@ -43,9 +45,20 @@ npm start
 
 ### Commands
 
-- **Chat**: Just type your question or request
-- **/run <file>**: Execute a code file
+#### File Operations
 - **/read <file>**: Read and display a file
+- **/write <file>**: Create or edit a file
+- **/run <file>**: Execute a code file
+
+#### Codebase Search
+- **/search <term>**: Search for text across all files
+- **/find <filename>**: Find files by name
+- **/tree**: Display project directory structure
+- **/analyze**: Analyze codebase statistics
+- **/list [extension]**: List all files (optionally filter by extension)
+
+#### General
+- **Chat**: Just type your question or request
 - **Ctrl+C**: Exit
 
 ### Examples
@@ -54,6 +67,11 @@ npm start
 > How do I create a React component?
 > /read src/App.tsx
 > /run examples/hello.js
+> /search "useState"
+> /find config
+> /tree
+> /analyze
+> /list .ts
 > Can you help me fix this error?
 ```
 
