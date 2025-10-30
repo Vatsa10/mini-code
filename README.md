@@ -1,16 +1,16 @@
-# MiniCode 🚀
+# MiniCode
 
 An intelligent, interactive coding environment that brings Claude Code–style conversational and code-editing capabilities to the command line, powered by MiniMax-M2 API.
 
 ## Features
 
-- 💬 **Interactive Chat**: Conversational AI coding assistant in your terminal
-- 📝 **Multi-file Editing**: Read, modify, and save multiple files with diff previews
-- ▶️ **Code Execution**: Run code directly and get instant feedback
-- 🔄 **Compile-Run-Fix Loop**: Automatic error detection and fix suggestions
-- 🎨 **Syntax Highlighting**: Beautiful code display with highlight.js
-- 📊 **Diff Visualization**: Color-coded diffs for all file changes
-- 💾 **Session Transcripts**: Auto-save conversation history
+- **Interactive Chat**: Conversational AI coding assistant in your terminal
+- **Multi-file Editing**: Read, modify, and save multiple files with diff previews
+- **Code Execution**: Run code directly and get instant feedback
+- **Compile-Run-Fix Loop**: Automatic error detection and fix suggestions
+- **Syntax Highlighting**: Beautiful code display with highlight.js
+- **Diff Visualization**: Color-coded diffs for all file changes
+- **Session Transcripts**: Auto-save conversation history
 
 ## Installation
 
