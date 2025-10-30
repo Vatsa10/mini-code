@@ -4,11 +4,14 @@ An intelligent, interactive coding environment that brings Claude Code–style c
 
 ## Features
 
+- **Multi-Agent System**: Specialized AI agents working together (Architect, Developer, Reviewer, Tester, Debugger, Documenter)
 - **Interactive Chat**: Conversational AI coding assistant in your terminal
 - **Codebase Search**: Search for text across files, find files by name, analyze project structure
 - **Multi-file Editing**: Read, modify, and save multiple files with diff previews
 - **Code Execution**: Run code directly and get instant feedback
-- **Compile-Run-Fix Loop**: Automatic error detection and fix suggestions
+- **Collaborative Review**: Multiple agents review code for quality, security, and testing
+- **Intelligent Debugging**: Specialized debugging agent analyzes and fixes errors
+- **Feature Development**: End-to-end feature implementation with design, code, tests, and docs
 - **Syntax Highlighting**: Beautiful code display with highlight.js
 - **Diff Visualization**: Color-coded diffs for all file changes
 - **Session Transcripts**: Auto-save conversation history
@@ -56,6 +59,14 @@ npm start
 - **/tree**: Display project directory structure
 - **/analyze**: Analyze codebase statistics
 - **/list [extension]**: List all files (optionally filter by extension)
+
+#### Multi-Agent Commands
+- **/agents**: List all available AI agents
+- **/agent <role> <task>**: Execute a task with a specific agent
+- **/review <file>**: Collaborative code review by multiple agents
+- **/debug <file>**: Multi-agent debugging and fix suggestions
+- **/implement <feature>**: Design and implement a feature end-to-end
+- **/workflow <goal>**: Create a multi-agent workflow plan
 
 #### General
 - **Chat**: Just type your question or request

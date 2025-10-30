@@ -9,7 +9,9 @@ import { Conversation } from '../core/conversation.js';
 import { FileManager } from '../core/filesystem.js';
 import { CodeEngine } from '../core/codeEngine.js';
 import { CodebaseSearch } from '../core/codebaseSearch.js';
+import { MultiAgentOrchestrator } from '../agents/multiAgentOrchestrator.js';
 import type { Message } from '../types.js';
+import type { AgentRole } from '../agents/types.js';
 
 export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -20,20 +22,20 @@ export const App: React.FC = () => {
   const [fileManager] = useState(() => new FileManager());
   const [codeEngine] = useState(() => new CodeEngine());
   const [codebaseSearch] = useState(() => new CodebaseSearch());
+  const [orchestrator] = useState(() => new MultiAgentOrchestrator(client));
 
   useEffect(() => {
     conversation.addMessage('system', 
-      'You are MiniCode, an intelligent coding assistant. You help developers with:\n' +
-      '- Answering coding questions and explaining concepts\n' +
-      '- Reading and analyzing code files\n' +
-      '- Searching through codebases to find relevant code\n' +
-      '- Running code and debugging errors\n' +
-      '- Suggesting fixes and improvements\n' +
-      '- Writing new code snippets\n' +
-      '- Understanding project structure and file organization\n\n' +
-      'Users can search the codebase with /search, find files with /find, view structure with /tree, ' +
-      'and analyze the project with /analyze. When they use these commands, help them understand ' +
-      'the results and suggest next steps. Be concise, practical, and focus on working solutions.'
+      'You are MiniCode, an intelligent multi-agent coding assistant. You coordinate specialized AI agents:\n' +
+      '- Architect: System design and architecture\n' +
+      '- Developer: Code implementation\n' +
+      '- Reviewer: Code quality and security\n' +
+      '- Tester: Test creation and validation\n' +
+      '- Debugger: Error analysis and fixes\n' +
+      '- Documenter: Documentation writing\n\n' +
+      'You help with code search (/search, /find, /tree), file operations (/read, /write, /run), ' +
+      'and multi-agent workflows (/review, /debug, /implement, /agent). ' +
+      'When users need complex tasks, suggest using specialized agents. Be concise and practical.'
     );
   }, []);
 
@@ -91,6 +93,43 @@ export const App: React.FC = () => {
       const parts = input.slice(5).trim().split(' ');
       const extension = parts[0] || undefined;
       await handleListFiles(extension);
+      return;
+    }
+
+    if (input.startsWith('/agent ')) {
+      const parts = input.slice(7).trim().split(' ');
+      const agentRole = parts[0] as AgentRole;
+      const task = parts.slice(1).join(' ');
+      await handleAgentTask(agentRole, task);
+      return;
+    }
+
+    if (input.startsWith('/agents')) {
+      handleListAgents();
+      return;
+    }
+
+    if (input.startsWith('/review ')) {
+      const filePath = input.slice(8).trim();
+      await handleCollaborativeReview(filePath);
+      return;
+    }
+
+    if (input.startsWith('/debug ')) {
+      const filePath = input.slice(7).trim();
+      await handleDebugWithAgents(filePath);
+      return;
+    }
+
+    if (input.startsWith('/implement ')) {
+      const feature = input.slice(11).trim();
+      await handleDesignAndImplement(feature);
+      return;
+    }
+
+    if (input.startsWith('/workflow ')) {
+      const goal = input.slice(10).trim();
+      await handleCreateWorkflow(goal);
       return;
     }
 
@@ -236,6 +275,122 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleAgentTask = async (agentRole: AgentRole, task: string) => {
+    try {
+      conversation.addMessage('assistant', `Consulting ${agentRole} agent...`);
+      setMessages([...conversation.getMessages()]);
+      
+      const result = await orchestrator.executeTask(agentRole, task);
+      conversation.addMessage('assistant', `${agentRole.toUpperCase()} Agent Response:\n\n${result}`);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Agent task failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleListAgents = () => {
+    const agentList = orchestrator.listAgents();
+    conversation.addMessage('assistant', `Available Agents:\n\n${agentList}\n\nUse: /agent <role> <task>`);
+    setMessages([...conversation.getMessages()]);
+  };
+
+  const handleCollaborativeReview = async (filePath: string) => {
+    try {
+      const code = await fileManager.readFile(filePath);
+      const ext = filePath.split('.').pop() || 'typescript';
+      
+      conversation.addMessage('assistant', `Starting collaborative review of ${filePath}...`);
+      setMessages([...conversation.getMessages()]);
+
+      const { review, improvements, tests } = await orchestrator.collaborativeReview(code, ext);
+      
+      let output = `Collaborative Review Complete:\n\n`;
+      output += `## Code Review\n${review}\n\n`;
+      output += `## Suggested Improvements\n${improvements}\n\n`;
+      output += `## Recommended Tests\n${tests}`;
+      
+      conversation.addMessage('assistant', output);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Review failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleDebugWithAgents = async (filePath: string) => {
+    try {
+      const result = await codeEngine.executeCode(filePath);
+      
+      if (result.exitCode === 0) {
+        conversation.addMessage('assistant', `No errors found. Code executed successfully.`);
+        setMessages([...conversation.getMessages()]);
+        return;
+      }
+
+      const code = await fileManager.readFile(filePath);
+      const ext = filePath.split('.').pop() || 'typescript';
+      
+      conversation.addMessage('assistant', `Multi-agent debugging in progress...`);
+      setMessages([...conversation.getMessages()]);
+
+      const { analysis, fix, explanation } = await orchestrator.debugWithSpecialist(
+        code,
+        result.stderr,
+        ext
+      );
+      
+      let output = `Debug Analysis Complete:\n\n`;
+      output += `## Error Analysis\n${analysis}\n\n`;
+      output += `## Proposed Fix\n${fix}\n\n`;
+      output += `## Explanation\n${explanation}`;
+      
+      conversation.addMessage('assistant', output);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Debug failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleDesignAndImplement = async (feature: string) => {
+    try {
+      conversation.addMessage('assistant', `Multi-agent feature development started...\n\nArchitect is designing...`);
+      setMessages([...conversation.getMessages()]);
+
+      const requirements = conversation.getContext();
+      const result = await orchestrator.designAndImplement(feature, requirements);
+      
+      let output = `Feature Development Complete:\n\n`;
+      output += `## Architecture Design\n${result.design}\n\n`;
+      output += `## Implementation\n${result.implementation}\n\n`;
+      output += `## Tests\n${result.tests}\n\n`;
+      output += `## Documentation\n${result.documentation}`;
+      
+      conversation.addMessage('assistant', output);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Implementation failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
+  const handleCreateWorkflow = async (goal: string) => {
+    try {
+      conversation.addMessage('assistant', `Creating workflow plan for: ${goal}`);
+      setMessages([...conversation.getMessages()]);
+
+      const context = conversation.getContext();
+      const plan = await orchestrator.createWorkflow(goal, context);
+      
+      conversation.addMessage('assistant', `Workflow Plan:\n\n${plan}\n\nUse this plan to execute tasks with /agent commands.`);
+      setMessages([...conversation.getMessages()]);
+    } catch (error) {
+      conversation.addMessage('assistant', `Workflow creation failed: ${error}`);
+      setMessages([...conversation.getMessages()]);
+    }
+  };
+
   return (
     <Box flexDirection="column" padding={1}>
       <Box borderStyle="double" borderColor="cyan" paddingX={2} paddingY={1} marginBottom={1}>
@@ -261,7 +416,7 @@ export const App: React.FC = () => {
       </Box>
       
       <Box marginTop={1}>
-        <Text dimColor>Commands: /run | /read | /write | /search | /find | /tree | /analyze | /list | Ctrl+C</Text>
+        <Text dimColor>File: /run /read /write | Search: /search /find /tree | Agents: /agents /agent /review /debug /implement</Text>
       </Box>
     </Box>
   );
