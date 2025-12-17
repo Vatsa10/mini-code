@@ -18,7 +18,5 @@ program
   .option('-m, --mode <mode>', 'Start in chat or edit mode', 'chat')
   .parse(process.argv);
 
-console.log('\n🚀 Starting MiniCode...\n');
-
 // Render the Ink app
 render(<App />);

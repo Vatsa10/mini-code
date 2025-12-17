@@ -204,7 +204,15 @@ export const App: React.FC = () => {
   const handleRunCode = async (filePath: string) => {
     try {
       const result = await codeEngine.executeCode(filePath);
-      const output = `Execution result:\n\nStdout:\n${result.stdout}\n\nStderr:\n${result.stderr}\n\nExit code: ${result.exitCode}`;
+      const output = `Execution result:
+
+Stdout:
+${result.stdout}
+
+Stderr:
+${result.stderr}
+
+Exit code: ${result.exitCode}`;
       
       conversation.addMessage('assistant', output);
       
@@ -223,7 +231,11 @@ export const App: React.FC = () => {
   const handleReadFile = async (filePath: string) => {
     try {
       const content = await fileManager.readFile(filePath);
-      conversation.addMessage('assistant', `File: ${filePath}\n\n\`\`\`\n${content}\n\`\`\``);
+      conversation.addMessage('assistant', `File: ${filePath}
+
+\`\`\`
+${content}
+\`\`\``);
       conversation.addFileOperation({ type: 'read', path: filePath });
       setMessages([...conversation.getMessages()]);
     } catch (error) {
@@ -333,7 +345,11 @@ export const App: React.FC = () => {
 
   const handleListAgents = () => {
     const agentList = orchestrator.listAgents();
-    conversation.addMessage('assistant', `Available Agents:\n\n${agentList}\n\nUse: /agent <role> <task>`);
+    conversation.addMessage('assistant', `Available Agents:
+
+${agentList}
+
+Use: /agent <role> <task>`);
     setMessages([...conversation.getMessages()]);
   };
 
@@ -425,7 +441,11 @@ export const App: React.FC = () => {
       const context = conversation.getContext();
       const plan = await orchestrator.createWorkflow(goal, context);
       
-      conversation.addMessage('assistant', `Workflow Plan:\n\n${plan}\n\nUse this plan to execute tasks with /agent commands.`);
+      conversation.addMessage('assistant', `Workflow Plan:
+
+${plan}
+
+Use this plan to execute tasks with /agent commands.`);
       setMessages([...conversation.getMessages()]);
     } catch (error) {
       conversation.addMessage('assistant', `Workflow creation failed: ${error}`);
@@ -439,7 +459,7 @@ export const App: React.FC = () => {
         <Text bold color="cyan">🚀 MiniCode - AI Coding Assistant</Text>
       </Box>
       
-      <Chat messages={messages} />
+      <Chat messages={messages.filter(msg => msg.role !== 'system')} />
       
       {streaming && currentResponse && (
         <Box marginBottom={1} flexDirection="column">
@@ -459,6 +479,12 @@ export const App: React.FC = () => {
       
       <Box marginTop={1}>
         <Text dimColor>File: /run /read /write | Search: /search /find /tree | Agents: /agents /agent /review /debug /implement</Text>
+      </Box>
+      <Box marginTop={1}>
+        <Text dimColor>Editing: ← → arrows, Backspace, Delete | Selection: Shift+←/→, Esc | Shortcuts: Ctrl+A (select all), Ctrl+E (end), Ctrl+K/U (cut)</Text>
+      </Box>
+      <Box marginTop={1}>
+        <Text dimColor>Copy/Paste: Use terminal right-click menu or Ctrl+Shift+C/V</Text>
       </Box>
     </Box>
   );
