@@ -18,5 +18,16 @@ program
   .option('-m, --mode <mode>', 'Start in chat or edit mode', 'chat')
   .parse(process.argv);
 
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  // Prevent immediate exit on Ctrl+C
+  // The app will handle Ctrl+C through the Input component
+});
+
 // Render the Ink app
-render(<App />);
+const { waitUntilExit } = render(<App />);
+
+// Wait for the app to exit gracefully
+waitUntilExit().then(() => {
+  process.exit(0);
+});

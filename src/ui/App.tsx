@@ -26,6 +26,11 @@ export const App: React.FC = () => {
   const [orchestrator] = useState(() => new MultiAgentOrchestrator(client));
   const [selectedModel, setSelectedModel] = useState(() => config.model || '');
 
+  // Handle graceful exit
+  const handleExit = () => {
+    process.exit(0);
+  };
+
   useEffect(() => {
     orchestrator.setModel(selectedModel);
   }, [selectedModel, orchestrator]);
@@ -474,14 +479,14 @@ Use this plan to execute tasks with /agent commands.`);
       )}
       
       <Box borderStyle="single" borderColor="gray" paddingX={1} marginTop={1}>
-        <Input onSubmit={handleSubmit} placeholder="Ask anything or use commands..." />
+        <Input onSubmit={handleSubmit} onExit={handleExit} placeholder="Ask anything or use commands..." />
       </Box>
       
       <Box marginTop={1}>
-        <Text dimColor>File: /run /read /write | Search: /search /find /tree | Agents: /agents /agent /review /debug /implement</Text>
+        <Text dimColor>File: /run /read /write | Search: /search /find /tree | Agents: /agents /agent /review /debug /implement | Exit: /quit, /exit, Ctrl+D</Text>
       </Box>
       <Box marginTop={1}>
-        <Text dimColor>Editing: ← → arrows, Backspace, Delete | Selection: Shift+←/→, Esc | Shortcuts: Ctrl+A (select all), Ctrl+E (end), Ctrl+K/U (cut)</Text>
+        <Text dimColor>Editing: ← → arrows, Backspace, Delete | Selection: Shift+←/→, Esc | Shortcuts: Ctrl+A (select all), Ctrl+E (end), Ctrl+K/U (cut), Ctrl+C (clear)</Text>
       </Box>
       <Box marginTop={1}>
         <Text dimColor>Copy/Paste: Use terminal right-click menu or Ctrl+Shift+C/V</Text>

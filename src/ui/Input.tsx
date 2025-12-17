@@ -4,9 +4,10 @@ import { Box, Text, useInput } from 'ink';
 interface InputProps {
   onSubmit: (value: string) => void;
   placeholder?: string;
+  onExit?: () => void;
 }
 
-export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = 'Type your message...' }) => {
+export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = 'Type your message...', onExit }) => {
   const [value, setValue] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
@@ -22,11 +23,30 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = 'Type your
   }, []);
 
   useInput((input, key) => {
-    const isBackspaceInput = input === '\b' || input === '\x7f' || (key.ctrl && input === 'h');
+    // Comprehensive backspace detection for PowerShell and other terminals
+    const isBackspaceInput = input === '\b' || input === '\x7f' || (key.ctrl && input === 'h') ||
+                             input === '\x1b\x7f' || input === '\x1b[3~' || // PowerShell escape sequences
+                             (key.ctrl && key.backspace) || // Ctrl+Backspace in some terminals
+                             input === '^?'; // Some terminals send ^? for backspace
+
+    // Handle Ctrl+D (EOF/exit)
+    if (key.ctrl && input === 'd') {
+      if (onExit) {
+        onExit();
+      }
+      return;
+    }
 
     // Handle submission
     if (key.return) {
       if (value.trim()) {
+        // Check for quit commands
+        if (value.trim() === '/quit' || value.trim() === '/exit' || value.trim() === 'quit') {
+          if (onExit) {
+            onExit();
+          }
+          return;
+        }
         onSubmit(value);
         setValue('');
         setCursorPosition(0);
@@ -108,15 +128,17 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = 'Type your
       return;
     }
 
-    // Handle Ctrl+C (copy selected text - this is typically handled by the terminal)
+    // Handle Ctrl+C (copy selected text or interrupt current operation)
     if (key.ctrl && input === 'c') {
-      // In terminal apps, copy is usually handled by the terminal itself
-      // We just ensure we don't interfere with the normal Ctrl+C behavior
       if (selectionStart !== null && selectionStart !== cursorPosition) {
         // If text is selected, let the terminal handle copy
         return;
       }
-      // If no text is selected, let the normal Ctrl+C exit behavior work
+      // If no text is selected, clear current input (like Claude's interrupt behavior)
+      setValue('');
+      setCursorPosition(0);
+      setSelectionStart(null);
+      return;
     }
 
     // Handle Ctrl+E (move to end)
@@ -157,8 +179,14 @@ export const Input: React.FC<InputProps> = ({ onSubmit, placeholder = 'Type your
       return;
     }
 
-    // Ignore other control characters that some terminals may send
-    if (input.length === 1 && input.charCodeAt(0) < 32) {
+    // Ignore other control characters and escape sequences that some terminals may send
+    // This includes PowerShell escape sequences and other terminal control codes
+    if (input.length === 1 && input.charCodeAt(0) < 32 && input !== '\b') {
+      return;
+    }
+    
+    // Ignore escape sequences that start with ESC (\x1b)
+    if (input.startsWith('\x1b') && input !== '\x1b\x7f') {
       return;
     }
 
