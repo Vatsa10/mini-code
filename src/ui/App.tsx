@@ -4,12 +4,13 @@ import { Chat } from './Chat.js';
 import { Input } from './Input.js';
 import { CodeBlock } from './CodeBlock.js';
 import { DiffView } from './DiffView.js';
-import { MinimaxClient } from '../api/minimaxClient.js';
+import { OpenRouterClient } from '../api/openRouterClient.js';
 import { Conversation } from '../core/conversation.js';
 import { FileManager } from '../core/filesystem.js';
 import { CodeEngine } from '../core/codeEngine.js';
 import { CodebaseSearch } from '../core/codebaseSearch.js';
 import { MultiAgentOrchestrator } from '../agents/multiAgentOrchestrator.js';
+import config from '../config.js';
 import type { Message } from '../types.js';
 import type { AgentRole } from '../agents/types.js';
 
@@ -18,11 +19,16 @@ export const App: React.FC = () => {
   const [streaming, setStreaming] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
   const [conversation] = useState(() => new Conversation());
-  const [client] = useState(() => new MinimaxClient());
+  const [client] = useState(() => new OpenRouterClient());
   const [fileManager] = useState(() => new FileManager());
   const [codeEngine] = useState(() => new CodeEngine());
   const [codebaseSearch] = useState(() => new CodebaseSearch());
   const [orchestrator] = useState(() => new MultiAgentOrchestrator(client));
+  const [selectedModel, setSelectedModel] = useState(() => config.model || '');
+
+  useEffect(() => {
+    orchestrator.setModel(selectedModel);
+  }, [selectedModel, orchestrator]);
 
   useEffect(() => {
     conversation.addMessage('system', 
@@ -133,20 +139,56 @@ export const App: React.FC = () => {
       return;
     }
 
+    if (input.startsWith('/model')) {
+      const modelName = input.slice(6).trim();
+      if (!modelName) {
+        conversation.addMessage(
+          'assistant',
+          selectedModel
+            ? `Current model: ${selectedModel}\nUse "/model <provider/model>" to change it.`
+            : 'No model selected. Use "/model <provider/model>" or set OPENROUTER_MODEL in your .env file.'
+        );
+      } else {
+        setSelectedModel(modelName);
+        conversation.addMessage('assistant', `Model set to: ${modelName}`);
+      }
+      setMessages([...conversation.getMessages()]);
+      return;
+    }
+
     // Stream AI response
+    if (!selectedModel) {
+      conversation.addMessage(
+        'assistant',
+        'Please set an OpenRouter model first using "/model <provider/model>" or define OPENROUTER_MODEL in your environment.'
+      );
+      setMessages([...conversation.getMessages()]);
+      return;
+    }
+
     setStreaming(true);
     setCurrentResponse('');
     
     try {
       let fullResponse = '';
-      for await (const chunk of client.streamChat(conversation.getMessages())) {
+      let usageInfo;
+      for await (const chunk of client.streamChat(conversation.getMessages(), selectedModel)) {
         if (!chunk.done) {
           fullResponse += chunk.content;
           setCurrentResponse(fullResponse);
+        } else if (chunk.usage) {
+          usageInfo = chunk.usage;
         }
       }
       
       conversation.addMessage('assistant', fullResponse);
+      if (usageInfo) {
+        const { promptTokens, completionTokens, totalTokens, reasoningTokens } = usageInfo;
+        const usageSummary =
+          `Usage — Prompt: ${promptTokens ?? 'N/A'}, Completion: ${completionTokens ?? 'N/A'}, ` +
+          `Total: ${totalTokens ?? 'N/A'}${reasoningTokens !== undefined ? `, Reasoning: ${reasoningTokens}` : ''}`;
+        conversation.addMessage('assistant', usageSummary);
+      }
       setMessages([...conversation.getMessages()]);
       setCurrentResponse('');
       await conversation.saveTranscript();

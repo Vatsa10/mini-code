@@ -17,9 +17,17 @@ export interface ConversationState {
   currentMode: 'chat' | 'edit';
 }
 
+export interface UsageMetrics {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  reasoningTokens?: number;
+}
+
 export interface StreamChunk {
   content: string;
   done: boolean;
+  usage?: UsageMetrics;
 }
 
 export interface ExecutionResult {

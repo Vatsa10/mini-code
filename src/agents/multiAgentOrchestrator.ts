@@ -1,15 +1,21 @@
-import { MinimaxClient } from '../api/minimaxClient.js';
+import { OpenRouterClient } from '../api/openRouterClient.js';
 import { AGENTS } from './agentDefinitions.js';
 import type { AgentRole, AgentTask, MultiAgentSession } from './types.js';
 import type { Message } from '../types.js';
 
 export class MultiAgentOrchestrator {
-  private client: MinimaxClient;
+  private client: OpenRouterClient;
   private sessions: Map<string, MultiAgentSession>;
+  private model: string;
 
-  constructor(client: MinimaxClient) {
+  constructor(client: OpenRouterClient, initialModel: string = '') {
     this.client = client;
     this.sessions = new Map();
+    this.model = initialModel;
+  }
+
+  setModel(model: string): void {
+    this.model = model;
   }
 
   async executeTask(
@@ -28,7 +34,7 @@ export class MultiAgentOrchestrator {
     ];
 
     let response = '';
-    for await (const chunk of this.client.streamChat(messages)) {
+    for await (const chunk of this.client.streamChat(messages, this.model)) {
       if (!chunk.done) {
         response += chunk.content;
       }

@@ -1,7 +1,7 @@
 {
   "name": "minicode",
   "version": "1.0.0",
-  "description": "Terminal-based coding assistant powered by MiniMax-M2",
+  "description": "Terminal-based coding assistant ",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
@@ -12,24 +12,30 @@
     "dev": "tsx src/index.tsx",
     "start": "node dist/index.js"
   },
-  "keywords": ["cli", "ai", "coding-assistant", "terminal"],
+  "keywords": [
+    "cli",
+    "ai",
+    "coding-assistant",
+    "terminal"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "ink": "^4.4.1",
-    "react": "^18.2.0",
-    "dotenv": "^16.3.1",
+    "@openrouter/sdk": "^0.3.1",
     "chalk": "^5.3.0",
+    "commander": "^11.1.0",
     "diff": "^5.1.0",
+    "dotenv": "^16.3.1",
     "highlight.js": "^11.9.0",
+    "ink": "^4.4.1",
     "node-fetch": "^3.3.2",
-    "commander": "^11.1.0"
+    "react": "^18.2.0"
   },
   "devDependencies": {
+    "@types/diff": "^5.0.9",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
-    "@types/diff": "^5.0.9",
-    "typescript": "^5.3.0",
-    "tsx": "^4.7.0"
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
   }
 }
